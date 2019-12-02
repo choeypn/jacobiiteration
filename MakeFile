@@ -1,4 +1,4 @@
-thread: thread.c
+thread: thread.c thread.h
       gcc -o thread thread.c 
 
 
