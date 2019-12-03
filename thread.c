@@ -18,10 +18,7 @@ int main(int argc, char *argv[]){
     j = 0;
     while(j < 1024){
       M[i][j] = in;
-      if(i == 0 || i == 1023)
-        N[i][j] = in;
-      else if(j == 0 || j == 1023)
-        N[i][j] = in;
+      N[i][j] = in;
       //printf("N[%d][%d] = %.10lf \n",i,j,N[i][j]);
       fscanf(f,"%lf",&in);
       j++;
@@ -36,14 +33,22 @@ int main(int argc, char *argv[]){
 }
 
 void jacobi(double (*M)[1024],double (*N)[1024]){
- 
-  for(int i = 1; i < 1022;i++){
-    for(int j = 1; j < 1022;j++){
-      N[i][j] = (M[i-1][j] + M[i+1][j] + M[i][j-1] + M[i][j+1])/4.0;
+ double old = 0, new = 1, eps;
+ int k = 0, state = 1; 
+ eps = 0.001;
+ while(k < 200){ 
+  for(int i = 1; i < 1023;i++){
+    for(int j = 1; j < 1023;j++){ 
+      new = (N[i-1][j] + N[i+1][j] + N[i][j-1] + N[i][j+1])/4.0;
+      if(new-N[i][j] > eps){
+        N[i][j] = new;
+      }
+      //N[i][j] = (N[i-1][j] + N[i+1][j] + N[i][j-1] + N[i][j+1])/4.0;
     }
   }
-/*
-  for(int k = 0; k < 1023;k++)
-    printf("N[1][%d] : %.10lf \n",k,N[1][k]);
-*/
+  
+  k++;
+ }
+  //for(int k = 0; k < 1023;k++)
+    printf("N[1][1] : %.10lf \n",N[1][1]);
 }
