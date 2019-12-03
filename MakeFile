@@ -1,5 +1,7 @@
 thread: thread.c thread.h
       gcc -o thread thread.c 
 
-
+getoutput: getoutout.c
+      gcc -o getoutput getoutput.c
+ 
 

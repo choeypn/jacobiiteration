@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <math.h>
 #include "thread.h"
 
 int main(int argc, char *argv[]){
@@ -19,7 +20,6 @@ int main(int argc, char *argv[]){
     while(j < 1024){
       M[i][j] = in;
       N[i][j] = in;
-      //printf("N[%d][%d] = %.10lf \n",i,j,N[i][j]);
       fscanf(f,"%lf",&in);
       j++;
     }
@@ -34,23 +34,26 @@ int main(int argc, char *argv[]){
 
 void jacobi(double (*M)[1024],double (*N)[1024]){
  double old = 0, new, eps;
- int k = 0, state; 
- eps = 0.002;
- while(k < 1000){
-  state = 1; 
+ int done = 0; 
+ eps = 0.001;
+ while(!done){
+  done = 1; 
   for(int i = 1; i < 1023;i++){
-    for(int j = 1; j < 1023;j++){ 
-      new = (N[i-1][j] + N[i+1][j] + N[i][j-1] + N[i][j+1])/4.0;
-      if(!new-N[i][j] < eps){
-        N[i][j] = new;
-        state = 0;
-      }
-    }
+    for(int j = 1; j < 1023;j++){
+      N[i][j] = (M[i-1][j] + M[i+1][j] + M[i][j-1] + M[i][j+1])/4.0;
+    } 
   }
- if(state)
-   break;
- k++;
+
+  for(int i = 1; i < 1023;i++){
+    for(int j = 1; j < 1023;j++){
+      if(fabs(M[i][j] - N[i][j]) > eps){
+        done = 0;
+      }
+      M[i][j] = N[i][j];
+    } 
+  }
  }
-  //for(int k = 0; k < 1023;k++)
-    printf("N[101][102] : %.10lf \n",N[101][102]);
+ int l = 40;
+ int k = 500;
+ printf("N[%d][%d] : %.10lf \n",l,k,N[l][k]);
 }
