@@ -7,7 +7,7 @@
 #include <semaphore.h>
 #include "thread.h"
 
-#define NUMTHD 2
+#define NUMTHD 4
 
 int main(int argc, char *argv[]){
   double in;
@@ -29,7 +29,7 @@ int main(int argc, char *argv[]){
       j++;
     }
   }
-  
+  printf("NUMBER OF THREADS : %d \n",NUMTHD); 
   clock_gettime(CLOCK_REALTIME,&TIMESPEC);
   start = TIMESPEC.tv_sec;
   
@@ -37,7 +37,8 @@ int main(int argc, char *argv[]){
    
   clock_gettime(CLOCK_REALTIME,&TIMESPEC);
   end = TIMESPEC.tv_sec;
-  printf("%d - %d = %d \n",start,end,end-start);
+
+  printf("processing time(sec) : %d \n",end-start);
   if(f != stdin)
     fclose(f);
   return 0;
@@ -50,7 +51,6 @@ int main(int argc, char *argv[]){
 */
 void jacobi(double (*M)[1024],double (*N)[1024]){
 
- //pthread_t mythread;
  struct threadArgs thdargs[NUMTHD];
  int count;
  count = 1022/NUMTHD;
@@ -61,15 +61,14 @@ void jacobi(double (*M)[1024],double (*N)[1024]){
  for(int i = 0; i < NUMTHD;i++){ 
    thdargs[i].M = M;
    thdargs[i].N = N;
-  thdargs[i].tnum = i;
-  thdargs[i].idxstart = 1 + count*i;
-  thdargs[i].idxend = thdargs[i].idxstart + count;
-  thdargs[i].lock = &lock;
-  if(i == NUMTHD-1)
-   thdargs[i].idxend = 1023;
-  if(pthread_create(&thdargs[i].threadID,NULL,thdJacobi,&thdargs[i]))
-    perror("thread error");
- 
+   thdargs[i].tnum = i;
+   thdargs[i].idxstart = 1 + count*i;
+   thdargs[i].idxend = thdargs[i].idxstart + count;
+   thdargs[i].lock = &lock;
+   if(i == NUMTHD-1)
+     thdargs[i].idxend = 1023;
+   if(pthread_create(&thdargs[i].threadID,NULL,thdJacobi,&thdargs[i]))
+     perror("thread error");
  }
  
  for(int i =0; i < NUMTHD;i++){
@@ -77,6 +76,9 @@ void jacobi(double (*M)[1024],double (*N)[1024]){
    if(pthread_join(thdargs[i].threadID,&p))
      perror("join error"); 
  }
+ int l = 512;
+ int k = 10;
+ printf("N[%d][%d] :  %.10lf \n",l,k,N[l][k]);
 
  sem_destroy(&lock);
 }
@@ -88,11 +90,11 @@ void *thdJacobi(void *arg){
   double(*m)[1024] = p->M;
   double(*n)[1024] = p->N; 
   int count;
- 
-  printf("th: %d  start : %d   end : %d \n",p->tnum,p->idxstart,p->idxend);  
+  
+  printf("thread %d starts at row %d, ends at row %d \n",p->tnum,p->idxstart,p->idxend-1);  
   while(!done){
-     
-    
+    sem_wait(p->lock); 
+
     done = 1;
     for(int i = p->idxstart; i < p->idxend;i++){
       for(int j = 1; j < 1023;j++){
@@ -100,11 +102,10 @@ void *thdJacobi(void *arg){
       } 
     }
 
-    sem_wait(p->lock);
-    sem_getvalue(p->lock,&count);
-    printf("%d \n",count);   
-    while(count > 0){}
-    
+    sem_post(p->lock);
+
+    sem_wait(p->lock); 
+
     for(int i = p->idxstart; i < p->idxend;i++){
       for(int j = 1; j < 1023;j++){
         if(fabs(m[i][j] - n[i][j]) > eps){
@@ -113,19 +114,25 @@ void *thdJacobi(void *arg){
         m[i][j] = n[i][j];
       } 
     }
-    for(int i =0; i < NUMTHD; i++)
-      sem_post(p->lock);
-  }
+    
+    sem_post(p->lock);
 
-  puts("thread finished processing");
+  }
+  printf("thread %d finished processing \n",p->tnum);
   return p;
 }
 
-void barrier(sem_t *s,sem_t *w){
-  int count = NUMTHD;
-  sem_wait(w);
-  while(count > 0){
-    sem_getvalue(w,&count);
-  }
+void barrier_init(struct barrier *b,sem_t *s){
+  b = malloc(sizeof(struct barrier));
+  b->mtx = s;
+  b->arrive = 0;
+  b->leave = 0;
+}
 
+void block(struct barrier *b){
+  int arrived = 0;
+  sem_wait(b->mtx);
+  arrived++;
+  while(arrived < NUMTHD){}
+  sem_post(b->mtx);
 }
