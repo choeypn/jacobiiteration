@@ -7,11 +7,12 @@
 #include <semaphore.h>
 #include "thread.h"
 
-#define NUMTHD 6
+#define NUMTHD 2
 
 int main(int argc, char *argv[]){
   double in;
-  int j,start,end;
+  int j;
+  unsigned long start,end;
   FILE *f;
   double(*M)[1024] = malloc(sizeof(double)*1024*1024);
   double(*N)[1024] = malloc(sizeof(double)*1024*1024);
@@ -30,6 +31,7 @@ int main(int argc, char *argv[]){
     }
   }
   printf("NUMBER OF THREADS : %d \n",NUMTHD); 
+  puts("===================================");
   clock_gettime(CLOCK_REALTIME,&TIMESPEC);
   start = TIMESPEC.tv_sec;
   
@@ -37,9 +39,11 @@ int main(int argc, char *argv[]){
    
   clock_gettime(CLOCK_REALTIME,&TIMESPEC);
   end = TIMESPEC.tv_sec;
+ 
+  puts("===================================");
+  printf("processing time(sec) : %ld \n",end-start);
 
-  printf("processing time(sec) : %d \n",end-start);
-
+  puts("===================================");
   int l = 1000;
   int k = 1000;
   printf("N[%d][%d] : %.10lf \n",l,k,N[l][k]);
@@ -87,7 +91,7 @@ void jacobi(double (*M)[1024],double (*N)[1024]){
 void *thdJacobi(void *arg){
   struct threadArgs *p = arg;
   int done = 0;
-  double eps = 0.00001;
+  double eps = 0.001;
   double(*m)[1024] = p->M;
   double(*n)[1024] = p->N; 
   int count;
