@@ -7,7 +7,7 @@
 #include <semaphore.h>
 #include "thread.h"
 
-#define NUMTHD 4
+#define NUMTHD 6
 
 int main(int argc, char *argv[]){
   double in;
@@ -39,6 +39,11 @@ int main(int argc, char *argv[]){
   end = TIMESPEC.tv_sec;
 
   printf("processing time(sec) : %d \n",end-start);
+
+  int l = 1000;
+  int k = 1000;
+  printf("N[%d][%d] : %.10lf \n",l,k,N[l][k]);
+
   if(f != stdin)
     fclose(f);
   return 0;
@@ -76,17 +81,13 @@ void jacobi(double (*M)[1024],double (*N)[1024]){
    if(pthread_join(thdargs[i].threadID,&p))
      perror("join error"); 
  }
- int l = 512;
- int k = 10;
- printf("N[%d][%d] :  %.10lf \n",l,k,N[l][k]);
-
  sem_destroy(&lock);
 }
 
 void *thdJacobi(void *arg){
   struct threadArgs *p = arg;
   int done = 0;
-  double eps = 0.001;
+  double eps = 0.00001;
   double(*m)[1024] = p->M;
   double(*n)[1024] = p->N; 
   int count;
@@ -102,7 +103,11 @@ void *thdJacobi(void *arg){
       } 
     }
 
-    sem_post(p->lock);
+    sem_getvalue(p->lock,&count);
+    if(count == 0){
+      for(int i = 0; i < NUMTHD;i++)
+        sem_post(p->lock);
+    }
 
     sem_wait(p->lock); 
 
@@ -115,7 +120,11 @@ void *thdJacobi(void *arg){
       } 
     }
     
-    sem_post(p->lock);
+    sem_getvalue(p->lock,&count);
+    if(count == 0){
+      for(int i = 0; i < NUMTHD;i++)
+        sem_post(p->lock);
+    }
 
   }
   printf("thread %d finished processing \n",p->tnum);
