@@ -4,9 +4,13 @@
 */
 
 struct threadArgs {
+  pthread_t threadID;
   int tnum;
   double(*M)[1024];
   double(*N)[1024];
+  int idxstart;
+  int idxend;
+  sem_t* lock;
 };
 
 struct timespec TIMESPEC;
