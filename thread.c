@@ -7,7 +7,7 @@
 #include <semaphore.h>
 #include "thread.h"
 
-#define NUMTHD 2
+#define NUMTHD 6
 
 int main(int argc, char *argv[]){
   double in;
@@ -44,14 +44,11 @@ int main(int argc, char *argv[]){
   printf("processing time(sec) : %ld \n",end-start);
 
   puts("===================================");
-  int l = 1000;
-  int k = 1000;
-  printf("N[%d][%d] : %.10lf \n",l,k,N[l][k]);
-
   if(f != stdin)
     fclose(f);
   return 0;
 }
+
 
 /* 
   Jacobi iteration function 
@@ -91,12 +88,12 @@ void jacobi(double (*M)[1024],double (*N)[1024]){
 void *thdJacobi(void *arg){
   struct threadArgs *p = arg;
   int done = 0;
-  double eps = 0.001;
+  double eps = 0.00001;
   double(*m)[1024] = p->M;
   double(*n)[1024] = p->N; 
   int count;
   
-  printf("thread %d starts at row %d, ends at row %d \n",p->tnum,p->idxstart,p->idxend-1);  
+  printf("thread %d starts at row %d, ends at row %d \n",p->tnum,p->idxstart,p->idxend);  
   while(!done){
     sem_wait(p->lock); 
 
@@ -135,17 +132,3 @@ void *thdJacobi(void *arg){
   return p;
 }
 
-void barrier_init(struct barrier *b,sem_t *s){
-  b = malloc(sizeof(struct barrier));
-  b->mtx = s;
-  b->arrive = 0;
-  b->leave = 0;
-}
-
-void block(struct barrier *b){
-  int arrived = 0;
-  sem_wait(b->mtx);
-  arrived++;
-  while(arrived < NUMTHD){}
-  sem_post(b->mtx);
-}
