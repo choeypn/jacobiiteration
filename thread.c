@@ -91,17 +91,18 @@ void *thdJacobi(void *arg){
  
   printf("th: %d  start : %d   end : %d \n",p->tnum,p->idxstart,p->idxend);  
   while(!done){
-
-    done = 1; 
+     
+    
+    done = 1;
     for(int i = p->idxstart; i < p->idxend;i++){
       for(int j = 1; j < 1023;j++){
         n[i][j] = (m[i-1][j] + m[i+1][j] + m[i][j-1] + m[i][j+1])/4.0;
       } 
     }
+
     sem_wait(p->lock);
     sem_getvalue(p->lock,&count);
-    printf("%d \n",count);
-    
+    printf("%d \n",count);   
     while(count > 0){}
     
     for(int i = p->idxstart; i < p->idxend;i++){
@@ -111,10 +112,20 @@ void *thdJacobi(void *arg){
         }
         m[i][j] = n[i][j];
       } 
-    } 
+    }
     for(int i =0; i < NUMTHD; i++)
       sem_post(p->lock);
- }
+  }
+
   puts("thread finished processing");
   return p;
+}
+
+void barrier(sem_t *s,sem_t *w){
+  int count = NUMTHD;
+  sem_wait(w);
+  while(count > 0){
+    sem_getvalue(w,&count);
+  }
+
 }
