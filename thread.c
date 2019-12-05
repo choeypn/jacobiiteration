@@ -54,6 +54,7 @@ int main(int argc, char *argv[]){
   Jacobi iteration function 
   Read matrix M and assign values to N.
   Keep iterating until every element is in stable state.
+  Create threads to the number of NUMTHD, assigns each thread to each matrix area.
 */
 void jacobi(double (*M)[1024],double (*N)[1024]){
 
@@ -85,6 +86,12 @@ void jacobi(double (*M)[1024],double (*N)[1024]){
  sem_destroy(&lock);
 }
 
+/*
+  Thread Jacobi Iteration  
+  Keep iterating until output < eps(0.00001).
+  Block threads until every thread finished iterating for each step.
+  Return Once all the threads finished processing.
+*/
 void *thdJacobi(void *arg){
   struct threadArgs *p = arg;
   int done = 0;
