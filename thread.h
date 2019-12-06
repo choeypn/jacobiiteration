@@ -10,11 +10,10 @@ struct threadArgs {
   double(*N)[1024];
   int idxstart;
   int idxend;
-  sem_t *lock;
+  int *done;
 };
 struct timespec TIMESPEC;
 
 void jacobi(double (*M)[1024], double (*N)[1024]);
 
 void *thdJacobi(void *arg);
-
