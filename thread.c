@@ -7,7 +7,7 @@
 #include <semaphore.h>
 #include "thread.h"
 
-#define NUMTHD 6
+#define NUMTHD 8
 
 int main(int argc, char *argv[]){
   double in;
@@ -32,12 +32,12 @@ int main(int argc, char *argv[]){
   }
   printf("NUMBER OF THREADS : %d \n",NUMTHD); 
   puts("===================================");
-  clock_gettime(CLOCK_REALTIME,&TIMESPEC);
+  clock_gettime(CLOCK_MONOTONIC,&TIMESPEC);
   start = TIMESPEC.tv_sec;
   
   jacobi(M,N);  
    
-  clock_gettime(CLOCK_REALTIME,&TIMESPEC);
+  clock_gettime(CLOCK_MONOTONIC,&TIMESPEC);
   end = TIMESPEC.tv_sec;
  
   puts("===================================");
